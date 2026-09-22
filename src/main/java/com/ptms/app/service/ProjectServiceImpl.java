@@ -14,6 +14,9 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectServiceImpl() {
         this.projectDAO = new ProjectDAOImpl();
     }
+    public ProjectServiceImpl(ProjectDAO projectDAO) {
+        this.projectDAO = projectDAO;
+    }
 
     @Override
     public boolean createProject(Project project) {
@@ -22,6 +25,8 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectDAO.create(project);
     }
+
+
 
     @Override
     public Project getProjectById(int id) {
@@ -82,17 +87,7 @@ public class ProjectServiceImpl implements ProjectService {
         return projectDAO.findByDomain(domain);
     }
 
-    @Override
-    public List<Project> getProjectsByManager(int managerId) {
 
-        if (managerId <= 0) {
-            throw new IllegalArgumentException(
-                    "Manager ID must be greater than 0"
-            );
-        }
-
-        return projectDAO.findByManager(managerId);
-    }
 
     private void validateProject(Project project) {
 
@@ -110,11 +105,7 @@ public class ProjectServiceImpl implements ProjectService {
             );
         }
 
-        if (project.getManagerId() <= 0) {
-            throw new IllegalArgumentException(
-                    "Valid manager ID is required"
-            );
-        }
+
 
         if (project.getDomain() == null ||
                 project.getDomain().isBlank()) {
@@ -135,6 +126,15 @@ public class ProjectServiceImpl implements ProjectService {
         if (project.getTeamSize() < 0) {
             throw new IllegalArgumentException(
                     "Team size cannot be negative"
+            );
+        }
+
+        if (project.getStartDate() != null
+                && project.getDeadline() != null
+                && project.getDeadline().isBefore(project.getStartDate())) {
+
+            throw new IllegalArgumentException(
+                    "Deadline cannot be before start date"
             );
         }
     }

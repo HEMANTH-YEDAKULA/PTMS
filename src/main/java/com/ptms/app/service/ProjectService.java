@@ -18,5 +18,7 @@ public interface ProjectService {
 
     List<Project> getProjectsByDomain(String domain);
 
-    List<Project> getProjectsByManager(int managerId);
+
+
+
 }

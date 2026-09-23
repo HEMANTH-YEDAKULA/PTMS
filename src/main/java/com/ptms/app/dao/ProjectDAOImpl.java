@@ -232,35 +232,7 @@ public class ProjectDAOImpl implements ProjectDAO {
         return projects;
     }
 
-    @Override
-    public List<Project> findByManager(int managerId) {
 
-        String sql = """
-                SELECT * FROM projects
-                WHERE manager_id = ?
-                ORDER BY id
-                """;
-
-        List<Project> projects = new ArrayList<>();
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, managerId);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    projects.add(mapProject(resultSet));
-                }
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to find projects by manager", e);
-        }
-
-        return projects;
-    }
 
     private Project mapProject(ResultSet resultSet) throws SQLException {
 

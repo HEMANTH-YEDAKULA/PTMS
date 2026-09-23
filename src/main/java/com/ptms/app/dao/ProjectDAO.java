@@ -20,5 +20,5 @@ public interface ProjectDAO {
 
     List<Project> findByDomain(String domain);
 
-    List<Project> findByManager(int managerId);
+
 }

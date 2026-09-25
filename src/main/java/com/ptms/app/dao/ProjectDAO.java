@@ -14,11 +14,7 @@ public interface ProjectDAO {
 
     boolean update(Project project);
 
-    boolean deleteById(int id);
-
-    boolean existsById(int id);
+    boolean delete(int id);
 
     List<Project> findByDomain(String domain);
-
-
 }

@@ -1,5 +1,7 @@
 package com.ptms.app.dao;
 import com.ptms.app.model.User;
 public interface UserDAO {
-     User findUserByEmail(String email);
+    User findByEmail(String email);
+
+    User findUserByEmail(String email);
 }

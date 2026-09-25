@@ -1,6 +1,7 @@
 package com.ptms.app.controller;
 
 import com.ptms.app.model.Project;
+import com.ptms.app.model.User;
 import com.ptms.app.service.ProjectService;
 import com.ptms.app.service.ProjectServiceImpl;
 
@@ -14,12 +15,16 @@ public class ProjectController {
     private final ProjectService projectService;
     private final Scanner scanner;
 
-    public ProjectController() {
+    public ProjectController(Scanner scanner) {
         this.projectService = new ProjectServiceImpl();
-        this.scanner = new Scanner(System.in);
+        this.scanner = scanner;
     }
 
-    public void createProject() {
+    // ---------------------------------------------------------
+    // CREATE PROJECT
+    // ---------------------------------------------------------
+
+    public void createProject(User loggedInUser) {
 
         System.out.println("\n--- Create Project ---");
 
@@ -39,9 +44,6 @@ public class ProjectController {
         BigDecimal cost =
                 new BigDecimal(scanner.nextLine());
 
-        System.out.print("Team size: ");
-        int teamSize = Integer.parseInt(scanner.nextLine());
-
         System.out.print("Start date (YYYY-MM-DD): ");
         LocalDate startDate =
                 LocalDate.parse(scanner.nextLine());
@@ -51,6 +53,7 @@ public class ProjectController {
                 LocalDate.parse(scanner.nextLine());
 
         Project project = new Project(
+                0,
                 name,
                 requirements,
                 managerId,
@@ -58,7 +61,6 @@ public class ProjectController {
                 null,
                 domain,
                 cost,
-                teamSize,
                 startDate,
                 deadline,
                 "MEDIUM",
@@ -66,7 +68,10 @@ public class ProjectController {
         );
 
         boolean created =
-                projectService.createProject(project);
+                projectService.createProject(
+                        project,
+                        loggedInUser
+                );
 
         if (created) {
             System.out.println(
@@ -75,6 +80,10 @@ public class ProjectController {
             );
         }
     }
+
+    // ---------------------------------------------------------
+    // VIEW PROJECT
+    // ---------------------------------------------------------
 
     public void viewProject() {
 
@@ -92,6 +101,10 @@ public class ProjectController {
         }
     }
 
+    // ---------------------------------------------------------
+    // VIEW ALL PROJECTS
+    // ---------------------------------------------------------
+
     public void viewAllProjects() {
 
         List<Project> projects =
@@ -105,37 +118,27 @@ public class ProjectController {
         projects.forEach(System.out::println);
     }
 
-    public void deleteProject() {
+    // ---------------------------------------------------------
+    // UPDATE PROJECT
+    // ---------------------------------------------------------
 
-        System.out.print("Enter project ID: ");
-
-        int id = Integer.parseInt(scanner.nextLine());
-
-        boolean deleted =
-                projectService.deleteProject(id);
-
-        System.out.println(
-                deleted
-                        ? "Project deleted successfully."
-                        : "Project not found."
-        );
-    }
-    public void updateProject() {
+    public void updateProject(User loggedInUser) {
 
         System.out.println("\n--- Update Project ---");
 
         System.out.print("Enter project ID: ");
         int id = Integer.parseInt(scanner.nextLine());
 
-        Project project = projectService.getProjectById(id);
+        Project existingProject =
+                projectService.getProjectById(id);
 
-        if (project == null) {
+        if (existingProject == null) {
             System.out.println("Project not found.");
             return;
         }
 
-        System.out.println("Current project:");
-        System.out.println(project);
+        System.out.println("\nCurrent project:");
+        System.out.println(existingProject);
 
         System.out.print("New project name: ");
         String name = scanner.nextLine();
@@ -150,16 +153,16 @@ public class ProjectController {
         String domain = scanner.nextLine();
 
         System.out.print("Cost: ");
-        BigDecimal cost = new BigDecimal(scanner.nextLine());
-
-        System.out.print("Team size: ");
-        int teamSize = Integer.parseInt(scanner.nextLine());
+        BigDecimal cost =
+                new BigDecimal(scanner.nextLine());
 
         System.out.print("Start date (YYYY-MM-DD): ");
-        LocalDate startDate = LocalDate.parse(scanner.nextLine());
+        LocalDate startDate =
+                LocalDate.parse(scanner.nextLine());
 
         System.out.print("Deadline (YYYY-MM-DD): ");
-        LocalDate deadline = LocalDate.parse(scanner.nextLine());
+        LocalDate deadline =
+                LocalDate.parse(scanner.nextLine());
 
         System.out.print("Priority: ");
         String priority = scanner.nextLine();
@@ -168,34 +171,69 @@ public class ProjectController {
         String status = scanner.nextLine();
 
         Project updatedProject = new Project(
+                id,
                 name,
                 requirements,
                 managerId,
-                project.getTeamLeadId(),
-                project.getClientId(),
+                existingProject.getTeamLeadId(),
+                existingProject.getClientId(),
                 domain,
                 cost,
-                teamSize,
                 startDate,
                 deadline,
                 priority,
                 status
         );
 
-        updatedProject.setId(id);
-
         boolean updated =
-                projectService.updateProject(updatedProject);
+                projectService.updateProject(
+                        updatedProject,
+                        loggedInUser
+                );
 
         if (updated) {
-            System.out.println("Project updated successfully.");
+            System.out.println(
+                    "Project updated successfully."
+            );
         } else {
-            System.out.println("Project update failed.");
+            System.out.println(
+                    "Project update failed."
+            );
         }
     }
+
+    // ---------------------------------------------------------
+    // DELETE PROJECT
+    // ---------------------------------------------------------
+
+    public void deleteProject(User loggedInUser) {
+
+        System.out.print("Enter project ID: ");
+
+        int id = Integer.parseInt(scanner.nextLine());
+
+        boolean deleted =
+                projectService.deleteProject(
+                        id,
+                        loggedInUser
+                );
+
+        System.out.println(
+                deleted
+                        ? "Project deleted successfully."
+                        : "Project not found."
+        );
+    }
+
+    // ---------------------------------------------------------
+    // FIND PROJECTS BY DOMAIN
+    // ---------------------------------------------------------
+
     public void findProjectsByDomain() {
 
-        System.out.println("\n--- Find Projects By Domain ---");
+        System.out.println(
+                "\n--- Find Projects By Domain ---"
+        );
 
         System.out.print("Enter domain: ");
         String domain = scanner.nextLine();
@@ -211,6 +249,9 @@ public class ProjectController {
         projects.forEach(System.out::println);
     }
 
+    public void getProject(Scanner scanner) {
+    }
 
-
+    public void getAllProjects() {
+    }
 }

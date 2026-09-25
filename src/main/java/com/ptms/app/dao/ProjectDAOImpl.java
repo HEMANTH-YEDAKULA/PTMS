@@ -15,70 +15,89 @@ public class ProjectDAOImpl implements ProjectDAO {
         String sql = """
                 INSERT INTO projects
                 (name, requirements, manager_id, team_lead_id, client_id,
-                 domain, cost, team_size, start_date, deadline, priority, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 domain, cost, start_date, deadline, priority, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(
-                     sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement =
+                     connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, project.getName());
             statement.setString(2, project.getRequirements());
             statement.setInt(3, project.getManagerId());
 
-            if (project.getTeamLeadId() != null) {
-                statement.setInt(4, project.getTeamLeadId());
-            } else {
+            if (project.getTeamLeadId() == null) {
                 statement.setNull(4, Types.INTEGER);
+            } else {
+                statement.setInt(4, project.getTeamLeadId());
             }
 
-            if (project.getClientId() != null) {
-                statement.setInt(5, project.getClientId());
-            } else {
+            if (project.getClientId() == null) {
                 statement.setNull(5, Types.INTEGER);
+            } else {
+                statement.setInt(5, project.getClientId());
             }
 
             statement.setString(6, project.getDomain());
             statement.setBigDecimal(7, project.getCost());
-            statement.setInt(8, project.getTeamSize());
-            statement.setObject(9, project.getStartDate());
-            statement.setObject(10, project.getDeadline());
-            statement.setString(11, project.getPriority());
-            statement.setString(12, project.getStatus());
 
-            int rows = statement.executeUpdate();
-
-            if (rows == 1) {
-                try (ResultSet keys = statement.getGeneratedKeys()) {
-                    if (keys.next()) {
-                        project.setId(keys.getInt(1));
-                    }
-                }
-                return true;
+            if (project.getStartDate() == null) {
+                statement.setNull(8, Types.DATE);
+            } else {
+                statement.setDate(8, Date.valueOf(project.getStartDate()));
             }
 
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to create project", e);
-        }
+            if (project.getDeadline() == null) {
+                statement.setNull(9, Types.DATE);
+            } else {
+                statement.setDate(9, Date.valueOf(project.getDeadline()));
+            }
 
-        return false;
+            statement.setString(10, project.getPriority());
+            statement.setString(11, project.getStatus());
+
+            int rowsAffected = statement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                return false;
+            }
+
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    project.setId(generatedKeys.getInt(1));
+                }
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create project", e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Project findById(int id) {
 
-        String sql = "SELECT * FROM projects WHERE id = ?";
+        String sql = """
+                SELECT id, name, requirements, manager_id, team_lead_id,
+                       client_id, domain, cost, start_date, deadline,
+                       priority, status
+                FROM projects
+                WHERE id = ?
+                """;
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, id);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet rs = statement.executeQuery()) {
 
-                if (resultSet.next()) {
-                    return mapProject(resultSet);
+                if (rs.next()) {
+                    return mapProject(rs);
                 }
             }
 
@@ -92,16 +111,22 @@ public class ProjectDAOImpl implements ProjectDAO {
     @Override
     public List<Project> findAll() {
 
-        String sql = "SELECT * FROM projects ORDER BY id";
+        String sql = """
+                SELECT id, name, requirements, manager_id, team_lead_id,
+                       client_id, domain, cost, start_date, deadline,
+                       priority, status
+                FROM projects
+                ORDER BY id
+                """;
 
         List<Project> projects = new ArrayList<>();
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+             ResultSet rs = statement.executeQuery()) {
 
-            while (resultSet.next()) {
-                projects.add(mapProject(resultSet));
+            while (rs.next()) {
+                projects.add(mapProject(rs));
             }
 
         } catch (SQLException | ClassNotFoundException e) {
@@ -123,7 +148,6 @@ public class ProjectDAOImpl implements ProjectDAO {
                     client_id = ?,
                     domain = ?,
                     cost = ?,
-                    team_size = ?,
                     start_date = ?,
                     deadline = ?,
                     priority = ?,
@@ -138,28 +162,38 @@ public class ProjectDAOImpl implements ProjectDAO {
             statement.setString(2, project.getRequirements());
             statement.setInt(3, project.getManagerId());
 
-            if (project.getTeamLeadId() != null) {
-                statement.setInt(4, project.getTeamLeadId());
-            } else {
+            if (project.getTeamLeadId() == null) {
                 statement.setNull(4, Types.INTEGER);
+            } else {
+                statement.setInt(4, project.getTeamLeadId());
             }
 
-            if (project.getClientId() != null) {
-                statement.setInt(5, project.getClientId());
-            } else {
+            if (project.getClientId() == null) {
                 statement.setNull(5, Types.INTEGER);
+            } else {
+                statement.setInt(5, project.getClientId());
             }
 
             statement.setString(6, project.getDomain());
             statement.setBigDecimal(7, project.getCost());
-            statement.setInt(8, project.getTeamSize());
-            statement.setObject(9, project.getStartDate());
-            statement.setObject(10, project.getDeadline());
-            statement.setString(11, project.getPriority());
-            statement.setString(12, project.getStatus());
-            statement.setInt(13, project.getId());
 
-            return statement.executeUpdate() == 1;
+            if (project.getStartDate() == null) {
+                statement.setNull(8, Types.DATE);
+            } else {
+                statement.setDate(8, Date.valueOf(project.getStartDate()));
+            }
+
+            if (project.getDeadline() == null) {
+                statement.setNull(9, Types.DATE);
+            } else {
+                statement.setDate(9, Date.valueOf(project.getDeadline()));
+            }
+
+            statement.setString(10, project.getPriority());
+            statement.setString(11, project.getStatus());
+            statement.setInt(12, project.getId());
+
+            return statement.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException("Failed to update project", e);
@@ -167,7 +201,7 @@ public class ProjectDAOImpl implements ProjectDAO {
     }
 
     @Override
-    public boolean deleteById(int id) {
+    public boolean delete(int id) {
 
         String sql = "DELETE FROM projects WHERE id = ?";
 
@@ -176,7 +210,7 @@ public class ProjectDAOImpl implements ProjectDAO {
 
             statement.setInt(1, id);
 
-            return statement.executeUpdate() == 1;
+            return statement.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException("Failed to delete project", e);
@@ -184,29 +218,13 @@ public class ProjectDAOImpl implements ProjectDAO {
     }
 
     @Override
-    public boolean existsById(int id) {
-
-        String sql = "SELECT 1 FROM projects WHERE id = ?";
-
-        try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, id);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next();
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to check project", e);
-        }
-    }
-
-    @Override
     public List<Project> findByDomain(String domain) {
 
         String sql = """
-                SELECT * FROM projects
+                SELECT id, name, requirements, manager_id, team_lead_id,
+                       client_id, domain, cost, start_date, deadline,
+                       priority, status
+                FROM projects
                 WHERE domain = ?
                 ORDER BY id
                 """;
@@ -218,10 +236,10 @@ public class ProjectDAOImpl implements ProjectDAO {
 
             statement.setString(1, domain);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet rs = statement.executeQuery()) {
 
-                while (resultSet.next()) {
-                    projects.add(mapProject(resultSet));
+                while (rs.next()) {
+                    projects.add(mapProject(rs));
                 }
             }
 
@@ -232,44 +250,30 @@ public class ProjectDAOImpl implements ProjectDAO {
         return projects;
     }
 
+    private Project mapProject(ResultSet rs) throws SQLException {
 
+        Date startDate = rs.getDate("start_date");
+        Date deadline = rs.getDate("deadline");
 
-    private Project mapProject(ResultSet resultSet) throws SQLException {
+        int teamLeadId = rs.getInt("team_lead_id");
+        Integer teamLead = rs.wasNull() ? null : teamLeadId;
 
-        Project project = new Project();
+        int clientId = rs.getInt("client_id");
+        Integer client = rs.wasNull() ? null : clientId;
 
-        project.setId(resultSet.getInt("id"));
-        project.setName(resultSet.getString("name"));
-        project.setRequirements(resultSet.getString("requirements"));
-        project.setManagerId(resultSet.getInt("manager_id"));
-
-        int teamLeadId = resultSet.getInt("team_lead_id");
-        project.setTeamLeadId(
-                resultSet.wasNull() ? null : teamLeadId
+        return new Project(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("requirements"),
+                rs.getInt("manager_id"),
+                teamLead,
+                client,
+                rs.getString("domain"),
+                rs.getBigDecimal("cost"),
+                startDate != null ? startDate.toLocalDate() : null,
+                deadline != null ? deadline.toLocalDate() : null,
+                rs.getString("priority"),
+                rs.getString("status")
         );
-
-        int clientId = resultSet.getInt("client_id");
-        project.setClientId(
-                resultSet.wasNull() ? null : clientId
-        );
-
-        project.setDomain(resultSet.getString("domain"));
-        project.setCost(resultSet.getBigDecimal("cost"));
-        project.setTeamSize(resultSet.getInt("team_size"));
-
-        Date startDate = resultSet.getDate("start_date");
-        project.setStartDate(
-                startDate != null ? startDate.toLocalDate() : null
-        );
-
-        Date deadline = resultSet.getDate("deadline");
-        project.setDeadline(
-                deadline != null ? deadline.toLocalDate() : null
-        );
-
-        project.setPriority(resultSet.getString("priority"));
-        project.setStatus(resultSet.getString("status"));
-
-        return project;
     }
 }

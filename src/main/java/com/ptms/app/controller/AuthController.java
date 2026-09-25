@@ -5,7 +5,9 @@ import com.ptms.app.service.AuthService;
 import com.ptms.app.service.AuthServiceImpl;
 
 import java.util.Scanner;
+
 public class AuthController {
+
     private final Scanner scanner;
     private final AuthService authService;
 

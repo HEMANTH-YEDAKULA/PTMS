@@ -11,25 +11,25 @@ import java.sql.SQLException;
 public class UserDAOImpl implements UserDAO {
 
     @Override
-    public User findUserByEmail(String email) {
+    public User findByEmail(String email) {
 
-        String searchbymail = """
-                SELECT
-                    u.id,
-                    u.name,
-                    u.email,
-                    u.password_hash,
-                    u.role_id,
-                    r.role_name
-                FROM users u
-                JOIN roles r
-                    ON u.role_id = r.id
-                WHERE u.email = ?
+        String searchbyemail = """
+                SELECT id,
+                       first_name,
+                       last_name,
+                       username,
+                       email,
+                       password,
+                       role_name,
+                       date_of_birth,
+                       mobile_number,
+                       gender
+                FROM users
+                WHERE email = ?
                 """;
 
         try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(searchbymail)) {
+             PreparedStatement statement = connection.prepareStatement(searchbyemail);) {
 
             statement.setString(1, email);
 
@@ -39,21 +39,30 @@ public class UserDAOImpl implements UserDAO {
 
                     return new User(
                             resultSet.getInt("id"),
-                            resultSet.getString("name"),
+                            resultSet.getString("first_name"),
+                            resultSet.getString("last_name"),
+                            resultSet.getString("username"),
                             resultSet.getString("email"),
-                            resultSet.getString("password_hash"),
-                            resultSet.getInt("role_id"),
-                            resultSet.getString("role_name")
+                            resultSet.getString("password"),
+                            resultSet.getString("role_name"),
+                            resultSet.getDate("date_of_birth") != null
+                                    ? resultSet.getDate("date_of_birth").toLocalDate()
+                                    : null,
+                            resultSet.getString("mobile_number"),
+                            resultSet.getString("gender")
                     );
                 }
             }
 
         } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(
-                    "Failed to find user by email", e
-            );
+            throw new RuntimeException("Failed to find user by email", e);
         }
 
+        return null;
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
         return null;
     }
 }

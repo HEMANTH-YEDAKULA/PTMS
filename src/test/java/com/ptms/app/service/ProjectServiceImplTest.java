@@ -5,9 +5,6 @@ import com.ptms.app.model.Project;
 import com.ptms.app.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,18 +12,16 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class ProjectServiceImplTest {
 
-    @Mock
     private ProjectDAO projectDAO;
-
     private ProjectServiceImpl projectService;
-
     private User projectManager;
 
     @BeforeEach
     void setUp() {
+
+        projectDAO = mock(ProjectDAO.class);
 
         projectService = new ProjectServiceImpl(projectDAO);
 
@@ -62,7 +57,10 @@ class ProjectServiceImplTest {
         when(projectDAO.create(project)).thenReturn(true);
 
         boolean result =
-                projectService.createProject(project, projectManager);
+                projectService.createProject(
+                        project,
+                        projectManager
+                );
 
         assertTrue(result);
 
@@ -143,6 +141,26 @@ class ProjectServiceImplTest {
 
         assertEquals(
                 "Only ADMIN or PROJECT_MANAGER can manage projects",
+                exception.getMessage()
+        );
+
+        verifyNoInteractions(projectDAO);
+    }
+
+    @Test
+    void deleteProject_projectManager_isRejected() {
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> projectService.deleteProject(
+                                5,
+                                projectManager
+                        )
+                );
+
+        assertEquals(
+                "Only ADMIN can delete projects",
                 exception.getMessage()
         );
 

@@ -12,6 +12,7 @@ public class ProjectDAOTest {
         ProjectDAO projectDAO = new ProjectDAOImpl();
 
         Project project = new Project(
+                0,
                 "PTMS Development",
                 "Project Tracking Management System",
                 1,
@@ -19,7 +20,6 @@ public class ProjectDAOTest {
                 null,
                 "SOFTWARE",
                 new BigDecimal("500000.00"),
-                5,
                 LocalDate.now(),
                 LocalDate.now().plusMonths(3),
                 "HIGH",
@@ -34,10 +34,6 @@ public class ProjectDAOTest {
         Project found = projectDAO.findById(project.getId());
 
         System.out.println("Found: " + found);
-
-        System.out.println(
-                "Exists: " + projectDAO.existsById(project.getId())
-        );
 
         System.out.println("\nAll Projects:");
 

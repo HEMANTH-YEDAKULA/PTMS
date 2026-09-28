@@ -28,7 +28,8 @@ public class ProjectMemberDAOImpl implements ProjectMemberDAO {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to add project member", e);
+            throw new RuntimeException(
+                    "Failed to add project member: " + e.getMessage(), e);
         }
     }
 
@@ -49,7 +50,8 @@ public class ProjectMemberDAOImpl implements ProjectMemberDAO {
             return statement.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to remove project member", e);
+            throw new RuntimeException(
+                    "Failed to remove project member: " + e.getMessage(), e);
         }
     }
 
@@ -71,6 +73,7 @@ public class ProjectMemberDAOImpl implements ProjectMemberDAO {
                 INNER JOIN project_members pm
                     ON u.id = pm.user_id
                 WHERE pm.project_id = ?
+                ORDER BY u.id
                 """;
 
         List<User> members = new ArrayList<>();
@@ -80,28 +83,48 @@ public class ProjectMemberDAOImpl implements ProjectMemberDAO {
 
             statement.setInt(1, projectId);
 
-            try (ResultSet rs = statement.executeQuery()) {
+            try (ResultSet resultSet = statement.executeQuery()) {
 
-                while (rs.next()) {
+                while (resultSet.next()) {
+
                     User user = new User();
 
-                    user.setId(rs.getInt("id"));
-                    user.setFirstName(rs.getString("first_name"));
-                    user.setLastName(rs.getString("last_name"));
-                    user.setUsername(rs.getString("username"));
-                    user.setEmail(rs.getString("email"));
-                    user.setPassword(rs.getString("password"));
-                    user.setRoleName(rs.getString("role_name"));
-                    user.setDateOfBirth(rs.getDate("date_of_birth").toLocalDate());
-                    user.setMobileNumber(rs.getString("mobile_number"));
-                    user.setGender(rs.getString("gender"));
+                    user.setId(resultSet.getInt("id"));
+                    user.setFirstName(resultSet.getString("first_name"));
+                    user.setLastName(resultSet.getString("last_name"));
+                    user.setUsername(resultSet.getString("username"));
+                    user.setEmail(resultSet.getString("email"));
+                    user.setPassword(resultSet.getString("password"));
+                    user.setRoleName(resultSet.getString("role_name"));
+
+                    // date_of_birth is nullable
+                    Date dateOfBirth =
+                            resultSet.getDate("date_of_birth");
+
+                    if (dateOfBirth != null) {
+                        user.setDateOfBirth(
+                                dateOfBirth.toLocalDate()
+                        );
+                    } else {
+                        user.setDateOfBirth(null);
+                    }
+
+                    user.setMobileNumber(
+                            resultSet.getString("mobile_number")
+                    );
+
+                    user.setGender(
+                            resultSet.getString("gender")
+                    );
 
                     members.add(user);
                 }
             }
 
         } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to retrieve project members", e);
+            throw new RuntimeException(
+                    "Failed to retrieve project members: "
+                            + e.getMessage(), e);
         }
 
         return members;
@@ -122,16 +145,17 @@ public class ProjectMemberDAOImpl implements ProjectMemberDAO {
             statement.setInt(1, projectId);
             statement.setInt(2, userId);
 
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
+            try (ResultSet resultSet = statement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    return resultSet.getInt(1) > 0;
                 }
             }
 
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to check project membership", e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(
+                    "Failed to check project membership: "
+                            + e.getMessage(), e);
         }
 
         return false;

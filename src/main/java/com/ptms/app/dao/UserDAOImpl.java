@@ -267,26 +267,28 @@ public class UserDAOImpl implements UserDAO {
         return users;
     }
 
-    private User mapUser(ResultSet rs) throws SQLException {
+    private User mapUser(ResultSet resultSet) throws SQLException {
 
         User user = new User();
 
-        user.setId(rs.getInt("id"));
-        user.setFirstName(rs.getString("first_name"));
-        user.setLastName(rs.getString("last_name"));
-        user.setUsername(rs.getString("username"));
-        user.setEmail(rs.getString("email"));
-        user.setPassword(rs.getString("password"));
-        user.setRoleName(rs.getString("role_name"));
+        user.setId(resultSet.getInt("id"));
+        user.setFirstName(resultSet.getString("first_name"));
+        user.setLastName(resultSet.getString("last_name"));
+        user.setUsername(resultSet.getString("username"));
+        user.setEmail(resultSet.getString("email"));
+        user.setPassword(resultSet.getString("password"));
+        user.setRoleName(resultSet.getString("role_name"));
 
-        Date dateOfBirth = rs.getDate("date_of_birth");
+        Date dateOfBirth = resultSet.getDate("date_of_birth");
 
         if (dateOfBirth != null) {
             user.setDateOfBirth(dateOfBirth.toLocalDate());
+        } else {
+            user.setDateOfBirth(null);
         }
 
-        user.setMobileNumber(rs.getString("mobile_number"));
-        user.setGender(rs.getString("gender"));
+        user.setMobileNumber(resultSet.getString("mobile_number"));
+        user.setGender(resultSet.getString("gender"));
 
         return user;
     }

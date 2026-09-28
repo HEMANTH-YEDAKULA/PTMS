@@ -3,6 +3,9 @@ package com.ptms.app;
 import com.ptms.app.controller.AuthController;
 import com.ptms.app.controller.ProjectController;
 import com.ptms.app.controller.UserController;
+import com.ptms.app.controller.ProjectMemberController;
+import com.ptms.app.controller.TicketController;
+import com.ptms.app.controller.TicketTrackingController;
 import com.ptms.app.model.User;
 
 import java.util.Scanner;
@@ -10,6 +13,9 @@ import java.util.Scanner;
 public class MainApp {
 
     private static UserController userController;
+    private static ProjectMemberController projectMemberController;
+    private static TicketController ticketController;
+    private static TicketTrackingController ticketTrackingController;
 
     public static void main(String[] args) {
 
@@ -23,6 +29,15 @@ public class MainApp {
 
         userController =
                 new UserController(scanner);
+
+        projectMemberController =
+                new ProjectMemberController(scanner);
+
+        ticketController =
+                new TicketController(scanner);
+
+        ticketTrackingController =
+                new TicketTrackingController(scanner);
 
         try {
 
@@ -52,6 +67,12 @@ public class MainApp {
                     "Operation failed: " + e.getMessage()
             );
 
+        } catch (RuntimeException e) {
+
+            System.out.println(
+                    "Application error: " + e.getMessage()
+            );
+
         } finally {
 
             scanner.close();
@@ -60,8 +81,6 @@ public class MainApp {
             System.out.println("Application closed.");
         }
     }
-
-
 
     private static void showDashboard(
             User loggedInUser,
@@ -73,43 +92,36 @@ public class MainApp {
         switch (role) {
 
             case "ADMIN":
-
                 showAdminDashboard(
                         loggedInUser,
                         projectController,
                         scanner
                 );
-
                 break;
 
-
             case "PROJECT_MANAGER":
-
                 showProjectManagerDashboard(
                         loggedInUser,
                         projectController,
                         scanner
                 );
-
                 break;
-
 
             case "TEAM_LEAD":
-
-                showTeamLeadDashboard(loggedInUser);
-
+                showTeamLeadDashboard(
+                        loggedInUser,
+                        scanner
+                );
                 break;
-
 
             case "EMPLOYEE":
-
-                showEmployeeDashboard(loggedInUser);
-
+                showEmployeeDashboard(
+                        loggedInUser,
+                        scanner
+                );
                 break;
 
-
             default:
-
                 System.out.println(
                         "No dashboard available for role: "
                                 + role
@@ -130,7 +142,6 @@ public class MainApp {
             System.out.println("==============================");
             System.out.println(" ADMIN DASHBOARD");
             System.out.println("==============================");
-
             System.out.println("1. User Management");
             System.out.println("2. Project Management");
             System.out.println("0. Logout");
@@ -146,143 +157,26 @@ public class MainApp {
                 switch (option) {
 
                     case 1:
-
                         showUserManagementMenu(
                                 loggedInUser,
                                 scanner
                         );
-
                         break;
 
-
                     case 2:
-
                         showProjectManagementMenu(
                                 loggedInUser,
                                 projectController,
                                 scanner,
                                 true
                         );
-
                         break;
 
-
                     case 0:
-
                         System.out.println("Logged out.");
-
                         return;
 
-
                     default:
-
-                        System.out.println(
-                                "Invalid option."
-                        );
-                }
-
-            } catch (NumberFormatException e) {
-
-                System.out.println(
-                        "Please enter a valid number."
-                );
-            }
-        }
-    }
-
-
-
-
-    private static void showUserManagementMenu(
-            User loggedInUser,
-            Scanner scanner) {
-
-        while (true) {
-
-            System.out.println();
-            System.out.println("==============================");
-            System.out.println(" USER MANAGEMENT");
-            System.out.println("==============================");
-
-            System.out.println("1. Create User");
-            System.out.println("2. View User");
-            System.out.println("3. View All Users");
-            System.out.println("4. Update User");
-            System.out.println("5. Delete User");
-            System.out.println("6. Find Users by Role");
-            System.out.println("0. Back");
-
-            System.out.print("Choose option: ");
-
-            String input = scanner.nextLine();
-
-            try {
-
-                int option = Integer.parseInt(input);
-
-                switch (option) {
-
-                    case 1:
-
-                        userController.createUser(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 2:
-
-                        userController.viewUser(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 3:
-
-                        userController.viewAllUsers(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 4:
-
-                        userController.updateUser(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 5:
-
-                        userController.deleteUser(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 6:
-
-                        userController.findUsersByRole(
-                                loggedInUser
-                        );
-
-                        break;
-
-
-                    case 0:
-
-                        return;
-
-
-                    default:
-
                         System.out.println(
                                 "Invalid option."
                         );
@@ -306,6 +200,96 @@ public class MainApp {
 
 
 
+    private static void showUserManagementMenu(
+            User loggedInUser,
+            Scanner scanner) {
+
+        while (true) {
+
+            System.out.println();
+            System.out.println("==============================");
+            System.out.println(" USER MANAGEMENT");
+            System.out.println("==============================");
+            System.out.println("1. Create User");
+            System.out.println("2. View User");
+            System.out.println("3. View All Users");
+            System.out.println("4. Update User");
+            System.out.println("5. Delete User");
+            System.out.println("6. Find Users by Role");
+            System.out.println("0. Back");
+
+            System.out.print("Choose option: ");
+
+            String input = scanner.nextLine();
+
+            try {
+
+                int option = Integer.parseInt(input);
+
+                switch (option) {
+
+                    case 1:
+                        userController.createUser(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 2:
+                        userController.viewUser(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 3:
+                        userController.viewAllUsers(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 4:
+                        userController.updateUser(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 5:
+                        userController.deleteUser(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 6:
+                        userController.findUsersByRole(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 0:
+                        return;
+
+                    default:
+                        System.out.println(
+                                "Invalid option."
+                        );
+                }
+
+            } catch (NumberFormatException e) {
+
+                System.out.println(
+                        "Please enter a valid number."
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Operation failed: "
+                                + e.getMessage()
+                );
+            }
+        }
+    }
+
+
 
     private static void showProjectManagerDashboard(
             User loggedInUser,
@@ -318,7 +302,6 @@ public class MainApp {
             System.out.println("==============================");
             System.out.println(" PROJECT MANAGER DASHBOARD");
             System.out.println("==============================");
-
             System.out.println("1. Project Management");
             System.out.println("0. Logout");
 
@@ -333,26 +316,19 @@ public class MainApp {
                 switch (option) {
 
                     case 1:
-
                         showProjectManagementMenu(
                                 loggedInUser,
                                 projectController,
                                 scanner,
                                 false
                         );
-
                         break;
 
-
                     case 0:
-
                         System.out.println("Logged out.");
-
                         return;
 
-
                     default:
-
                         System.out.println(
                                 "Invalid option."
                         );
@@ -381,19 +357,15 @@ public class MainApp {
             System.out.println("==============================");
             System.out.println(" PROJECT MANAGEMENT");
             System.out.println("==============================");
-
             System.out.println("1. Create Project");
             System.out.println("2. View Project");
             System.out.println("3. View All Projects");
             System.out.println("4. Update Project");
 
             if (admin) {
-
                 System.out.println("5. Delete Project");
                 System.out.println("6. Find Projects by Domain");
-
             } else {
-
                 System.out.println("5. Find Projects by Domain");
             }
 
@@ -412,60 +384,39 @@ public class MainApp {
                     switch (option) {
 
                         case 1:
-
                             projectController.createProject(
                                     loggedInUser
                             );
-
                             break;
-
 
                         case 2:
-
                             projectController.viewProject();
-
                             break;
-
 
                         case 3:
-
                             projectController.viewAllProjects();
-
                             break;
 
-
                         case 4:
-
                             projectController.updateProject(
                                     loggedInUser
                             );
-
                             break;
 
-
                         case 5:
-
                             projectController.deleteProject(
                                     loggedInUser
                             );
-
                             break;
-
 
                         case 6:
-
                             projectController.findProjectsByDomain();
-
                             break;
 
-
                         case 0:
-
                             return;
 
-
                         default:
-
                             System.out.println(
                                     "Invalid option."
                             );
@@ -476,51 +427,33 @@ public class MainApp {
                     switch (option) {
 
                         case 1:
-
                             projectController.createProject(
                                     loggedInUser
                             );
-
                             break;
-
 
                         case 2:
-
                             projectController.viewProject();
-
                             break;
-
 
                         case 3:
-
                             projectController.viewAllProjects();
-
                             break;
 
-
                         case 4:
-
                             projectController.updateProject(
                                     loggedInUser
                             );
-
                             break;
-
 
                         case 5:
-
                             projectController.findProjectsByDomain();
-
                             break;
 
-
                         case 0:
-
                             return;
 
-
                         default:
-
                             System.out.println(
                                     "Invalid option."
                             );
@@ -546,41 +479,142 @@ public class MainApp {
 
 
     private static void showTeamLeadDashboard(
-            User loggedInUser) {
+            User loggedInUser,
+            Scanner scanner) {
 
-        System.out.println();
+        while (true) {
 
-        System.out.println("==============================");
-        System.out.println(" TEAM LEAD DASHBOARD");
-        System.out.println("==============================");
+            System.out.println();
+            System.out.println("==============================");
+            System.out.println(" TEAM LEAD DASHBOARD");
+            System.out.println("==============================");
+            System.out.println("1. Project Members");
+            System.out.println("2. Ticket Management");
+            System.out.println("3. Ticket Tracking");
+            System.out.println("0. Logout");
 
-        System.out.println(
-                "Ticket and task operations will "
-                        + "be available in the next module."
-        );
+            System.out.print("Choose option: ");
 
-        System.out.println();
+            String input = scanner.nextLine();
 
-        System.out.println("Logged out.");
+            try {
+
+                int option = Integer.parseInt(input);
+
+                switch (option) {
+
+                    case 1:
+                        projectMemberController.showMenu(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 2:
+                        ticketController.showMenu(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 3:
+                        ticketTrackingController.showTeamLeadMenu(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 0:
+                        System.out.println("Logged out.");
+                        return;
+
+                    default:
+                        System.out.println(
+                                "Invalid option."
+                        );
+                }
+
+            } catch (NumberFormatException e) {
+
+                System.out.println(
+                        "Please enter a valid number."
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Operation failed: "
+                                + e.getMessage()
+                );
+
+            } catch (RuntimeException e) {
+
+                System.out.println(
+                        "Operation failed: "
+                                + e.getMessage()
+                );
+            }
+        }
     }
 
 
+
     private static void showEmployeeDashboard(
-            User loggedInUser) {
+            User loggedInUser,
+            Scanner scanner) {
 
-        System.out.println();
+        while (true) {
 
-        System.out.println("==============================");
-        System.out.println(" EMPLOYEE DASHBOARD");
-        System.out.println("==============================");
+            System.out.println();
 
-        System.out.println(
-                "Task and task-update operations will "
-                        + "be available in the next module."
-        );
+            System.out.println(" EMPLOYEE DASHBOARD");
 
-        System.out.println();
+            System.out.println("1. Ticket Tracking");
+            System.out.println("0. Logout");
 
-        System.out.println("Logged out.");
+            System.out.print("Choose option: ");
+
+            String input = scanner.nextLine();
+
+            try {
+
+                int option = Integer.parseInt(input);
+
+                switch (option) {
+
+                    case 1:
+                        ticketTrackingController.showEmployeeMenu(
+                                loggedInUser
+                        );
+                        break;
+
+                    case 0:
+                        System.out.println("Logged out.");
+                        return;
+
+                    default:
+                        System.out.println(
+                                "Invalid option."
+                        );
+                }
+
+            } catch (NumberFormatException e) {
+
+                System.out.println(
+                        "Please enter a valid number."
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Operation failed: "
+                                + e.getMessage()
+                );
+
+            } catch (RuntimeException e) {
+
+                System.out.println(
+                        "Operation failed: "
+                                + e.getMessage()
+                );
+            }
+        }
     }
 }

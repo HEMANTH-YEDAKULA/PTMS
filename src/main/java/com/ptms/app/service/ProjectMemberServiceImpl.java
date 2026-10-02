@@ -3,13 +3,14 @@ package com.ptms.app.service;
 import com.ptms.app.dao.ProjectMemberDAO;
 import com.ptms.app.dao.ProjectMemberDAOImpl;
 import com.ptms.app.model.User;
+import java.util.logging.Logger;
 
 import java.util.List;
 
 public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     private final ProjectMemberDAO projectMemberDAO;
-
+    private static final Logger LOGGER=Logger.getLogger(ProjectMemberServiceImpl.class.getName());
     public ProjectMemberServiceImpl() {
         this.projectMemberDAO = new ProjectMemberDAOImpl();
     }
@@ -45,11 +46,33 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
             );
         }
 
-        return projectMemberDAO.addMember(
-                projectId,
-                userId,
-                roleInProject
+        LOGGER.info(
+                "Adding user ID: "
+                        + userId
+                        + " to project ID: "
+                        + projectId
+                        + " by user ID: "
+                        + loggedInUser.getId()
         );
+
+        boolean result =
+                projectMemberDAO.addMember(
+                        projectId,
+                        userId,
+                        roleInProject
+                );
+
+        if (result) {
+            LOGGER.info(
+                    "Project member added successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Failed to add project member."
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -67,7 +90,32 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
             throw new IllegalArgumentException("User ID must be greater than 0");
         }
 
-        return projectMemberDAO.removeMember(projectId, userId);
+        LOGGER.info(
+                "Removing user ID: "
+                        + userId
+                        + " from project ID: "
+                        + projectId
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result =
+                projectMemberDAO.removeMember(
+                        projectId,
+                        userId
+                );
+
+        if (result) {
+            LOGGER.info(
+                    "Project member removed successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Project member removal failed."
+            );
+        }
+
+        return result;
     }
 
     @Override

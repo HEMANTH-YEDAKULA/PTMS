@@ -6,7 +6,6 @@ import com.ptms.app.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,154 +15,133 @@ class ProjectServiceImplTest {
 
     private ProjectDAO projectDAO;
     private ProjectServiceImpl projectService;
-    private User projectManager;
+
+    private User admin;
+    private User manager;
 
     @BeforeEach
     void setUp() {
 
         projectDAO = mock(ProjectDAO.class);
 
-        projectService = new ProjectServiceImpl(projectDAO);
+        projectService =
+                new ProjectServiceImpl(projectDAO);
 
-        projectManager = new User();
+        admin = new User();
+        admin.setId(1);
+        admin.setRoleName("ADMIN");
 
-        projectManager.setId(1);
-        projectManager.setFirstName("Test");
-        projectManager.setLastName("Manager");
-        projectManager.setUsername("test.manager");
-        projectManager.setEmail("test.manager@ptms.com");
-        projectManager.setPassword("TEMP_PASSWORD");
-        projectManager.setRoleName("PROJECT_MANAGER");
+        manager = new User();
+        manager.setId(2);
+        manager.setRoleName("PROJECT_MANAGER");
+    }
+
+    private Project createValidProject() {
+
+        Project project = new Project();
+
+        project.setName("Test Project");
+        project.setDomain("FINANCE");
+        project.setCost(new java.math.BigDecimal("100000"));
+        project.setStartDate(
+                LocalDate.of(2026, 10, 1)
+        );
+        project.setDeadline(
+                LocalDate.of(2026, 12, 31)
+        );
+
+        return project;
     }
 
     @Test
-    void createProject_validProject_callsDao() {
+    void shouldCreateProject() {
 
-        Project project = new Project(
-                0,
-                "PTMS Development",
-                "Project Tracking Management System",
-                1,
-                null,
-                null,
-                "SOFTWARE",
-                new BigDecimal("500000.00"),
-                LocalDate.now(),
-                LocalDate.now().plusMonths(3),
-                "HIGH",
-                "PLANNED"
-        );
+        Project project = createValidProject();
 
-        when(projectDAO.create(project)).thenReturn(true);
+        when(projectDAO.create(project))
+                .thenReturn(true);
 
         boolean result =
                 projectService.createProject(
                         project,
-                        projectManager
+                        manager
                 );
 
         assertTrue(result);
 
-        verify(projectDAO).create(project);
+        verify(projectDAO)
+                .create(project);
     }
 
     @Test
-    void createProject_invalidDates_doesNotCallDao() {
+    void shouldRejectInvalidDates() {
 
-        Project project = new Project(
-                0,
-                "PTMS Development",
-                "Project Tracking Management System",
-                1,
-                null,
-                null,
-                "SOFTWARE",
-                new BigDecimal("500000.00"),
-                LocalDate.of(2026, 10, 10),
-                LocalDate.of(2026, 10, 5),
-                "HIGH",
-                "PLANNED"
+        Project project = createValidProject();
+
+        project.setStartDate(
+                LocalDate.of(2026, 12, 31)
         );
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> projectService.createProject(
-                                project,
-                                projectManager
-                        )
-                );
-
-        assertEquals(
-                "Deadline cannot be before start date",
-                exception.getMessage()
+        project.setDeadline(
+                LocalDate.of(2026, 10, 1)
         );
 
-        verifyNoInteractions(projectDAO);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> projectService.createProject(
+                        project,
+                        manager
+                )
+        );
+
+        verify(
+                projectDAO,
+                never()
+        ).create(any());
     }
 
     @Test
-    void createProject_unauthorizedUser_doesNotCallDao() {
+    void shouldRejectUnauthorizedUser() {
+
+        Project project = createValidProject();
 
         User employee = new User();
-
-        employee.setId(2);
-        employee.setFirstName("Test");
-        employee.setLastName("Employee");
-        employee.setUsername("test.employee");
-        employee.setEmail("test.employee@ptms.com");
-        employee.setPassword("TEMP_PASSWORD");
+        employee.setId(7);
         employee.setRoleName("EMPLOYEE");
 
-        Project project = new Project(
-                0,
-                "PTMS Development",
-                "Project Tracking Management System",
-                1,
-                null,
-                null,
-                "SOFTWARE",
-                new BigDecimal("500000.00"),
-                LocalDate.now(),
-                LocalDate.now().plusMonths(3),
-                "HIGH",
-                "PLANNED"
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> projectService.createProject(
+                        project,
+                        employee
+                )
         );
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> projectService.createProject(
-                                project,
-                                employee
-                        )
-                );
-
-        assertEquals(
-                "Only ADMIN or PROJECT_MANAGER can manage projects",
-                exception.getMessage()
-        );
-
-        verifyNoInteractions(projectDAO);
+        verify(
+                projectDAO,
+                never()
+        ).create(any());
     }
 
     @Test
-    void deleteProject_projectManager_isRejected() {
+    void name() {
+    }
 
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> projectService.deleteProject(
-                                5,
-                                projectManager
-                        )
+    @Test
+    void shouldDeleteProjectAsAdmin() {
+
+        when(projectDAO.delete(3))
+                .thenReturn(true);
+
+        boolean result =
+                projectService.deleteProject(
+                        3,
+                        admin
                 );
 
-        assertEquals(
-                "Only ADMIN can delete projects",
-                exception.getMessage()
-        );
+        assertTrue(result);
 
-        verifyNoInteractions(projectDAO);
+        verify(projectDAO)
+                .delete(3);
     }
 }

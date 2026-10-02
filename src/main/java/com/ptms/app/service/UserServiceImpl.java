@@ -3,13 +3,14 @@ package com.ptms.app.service;
 import com.ptms.app.dao.UserDAO;
 import com.ptms.app.dao.UserDAOImpl;
 import com.ptms.app.model.User;
+import java.util.logging.Logger;
 
 import java.util.List;
 
 public class UserServiceImpl implements UserService {
 
     private final UserDAO userDAO;
-
+    private static final Logger LOGGER=Logger.getLogger(UserServiceImpl.class.getName());
     public UserServiceImpl() {
         this.userDAO = new UserDAOImpl();
     }
@@ -24,7 +25,26 @@ public class UserServiceImpl implements UserService {
         checkAdminAccess(loggedInUser);
         validateUser(user);
 
-        return userDAO.create(user);
+        LOGGER.info(
+                "Creating user by admin ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = userDAO.create(user);
+
+        if (result) {
+            LOGGER.info(
+                    "User created successfully: "
+                            + user.getEmail()
+            );
+        } else {
+            LOGGER.warning(
+                    "User creation failed: "
+                            + user.getEmail()
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -57,7 +77,28 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid user ID");
         }
 
-        return userDAO.update(user);
+        LOGGER.info(
+                "Updating user ID: "
+                        + user.getId()
+                        + " by admin ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = userDAO.update(user);
+
+        if (result) {
+            LOGGER.info(
+                    "User updated successfully: "
+                            + user.getId()
+            );
+        } else {
+            LOGGER.warning(
+                    "User update failed: "
+                            + user.getId()
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -75,7 +116,26 @@ public class UserServiceImpl implements UserService {
             );
         }
 
-        return userDAO.delete(id);
+        LOGGER.info(
+                "Deleting user ID: "
+                        + id
+                        + " by admin ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = userDAO.delete(id);
+
+        if (result) {
+            LOGGER.info(
+                    "User deleted successfully: " + id
+            );
+        } else {
+            LOGGER.warning(
+                    "User deletion failed: " + id
+            );
+        }
+
+        return result;
     }
 
     @Override

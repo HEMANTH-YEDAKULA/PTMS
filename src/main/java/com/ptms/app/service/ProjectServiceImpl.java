@@ -6,10 +6,14 @@ import com.ptms.app.model.Project;
 import com.ptms.app.model.User;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectDAO projectDAO;
+
+    private static final Logger LOGGER =
+            Logger.getLogger(ProjectServiceImpl.class.getName());
 
     public ProjectServiceImpl() {
         this.projectDAO = new ProjectDAOImpl();
@@ -19,19 +23,13 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectDAO = projectDAO;
     }
 
-
-
     @Override
     public boolean createProject(
             Project project,
             User loggedInUser) {
 
         validateProject(project);
-
-        checkProjectManagementAccess(
-                loggedInUser
-        );
-
+        checkProjectManagementAccess(loggedInUser);
 
         if ("PROJECT_MANAGER".equals(
                 loggedInUser.getRoleName())) {
@@ -41,31 +39,53 @@ public class ProjectServiceImpl implements ProjectService {
             );
         }
 
-        return projectDAO.create(project);
-    }
+        LOGGER.info(
+                "Creating project: "
+                        + project.getName()
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
 
+        boolean result = projectDAO.create(project);
+
+        if (result) {
+            LOGGER.info(
+                    "Project created successfully: "
+                            + project.getName()
+            );
+        } else {
+            LOGGER.warning(
+                    "Project creation failed: "
+                            + project.getName()
+            );
+        }
+
+        return result;
+    }
 
     @Override
     public Project getProjectById(int id) {
 
         if (id <= 0) {
-
             throw new IllegalArgumentException(
                     "Project ID must be positive"
             );
         }
 
+        LOGGER.info(
+                "Fetching project ID: " + id
+        );
+
         return projectDAO.findById(id);
     }
-
 
     @Override
     public List<Project> getAllProjects() {
 
+        LOGGER.info("Fetching all projects");
+
         return projectDAO.findAll();
     }
-
-
 
     @Override
     public boolean updateProject(
@@ -73,17 +93,31 @@ public class ProjectServiceImpl implements ProjectService {
             User loggedInUser) {
 
         validateProject(project);
+        checkProjectManagementAccess(loggedInUser);
 
-        checkProjectManagementAccess(
-                loggedInUser
+        LOGGER.info(
+                "Updating project ID: "
+                        + project.getId()
+                        + " by user ID: "
+                        + loggedInUser.getId()
         );
 
+        boolean result = projectDAO.update(project);
 
+        if (result) {
+            LOGGER.info(
+                    "Project updated successfully: "
+                            + project.getId()
+            );
+        } else {
+            LOGGER.warning(
+                    "Project update failed: "
+                            + project.getId()
+            );
+        }
 
-        return projectDAO.update(project);
+        return result;
     }
-
-
 
     @Override
     public boolean deleteProject(
@@ -93,16 +127,32 @@ public class ProjectServiceImpl implements ProjectService {
         checkAdminAccess(loggedInUser);
 
         if (id <= 0) {
-
             throw new IllegalArgumentException(
                     "Project ID must be positive"
             );
         }
 
-        return projectDAO.delete(id);
+        LOGGER.info(
+                "Deleting project ID: "
+                        + id
+                        + " by admin ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = projectDAO.delete(id);
+
+        if (result) {
+            LOGGER.info(
+                    "Project deleted successfully: " + id
+            );
+        } else {
+            LOGGER.warning(
+                    "Project deletion failed: " + id
+            );
+        }
+
+        return result;
     }
-
-
 
     @Override
     public List<Project> getProjectsByDomain(
@@ -116,25 +166,24 @@ public class ProjectServiceImpl implements ProjectService {
             );
         }
 
-        return projectDAO.findByDomain(
-                domain
+        LOGGER.info(
+                "Searching projects by domain: "
+                        + domain
         );
+
+        return projectDAO.findByDomain(domain);
     }
-
-
 
     private void checkProjectManagementAccess(
             User user) {
 
         if (user == null) {
-
             throw new IllegalArgumentException(
                     "User must be logged in"
             );
         }
 
-        String role =
-                user.getRoleName();
+        String role = user.getRoleName();
 
         if (!"ADMIN".equals(role)
                 && !"PROJECT_MANAGER".equals(role)) {
@@ -146,12 +195,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-
-
     private void checkAdminAccess(User user) {
 
         if (user == null) {
-
             throw new IllegalArgumentException(
                     "User must be logged in"
             );
@@ -166,13 +212,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
     }
 
-
-
     private void validateProject(
             Project project) {
 
         if (project == null) {
-
             throw new IllegalArgumentException(
                     "Project cannot be null"
             );

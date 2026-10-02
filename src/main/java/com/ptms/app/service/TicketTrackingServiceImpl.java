@@ -7,12 +7,15 @@ import com.ptms.app.dao.TicketTrackingDAOImpl;
 import com.ptms.app.model.Ticket;
 import com.ptms.app.model.TicketTracking;
 import com.ptms.app.model.User;
-
+import java.util.logging.Logger;
 import java.util.List;
 
 public class TicketTrackingServiceImpl
         implements TicketTrackingService {
-
+    private static final Logger LOGGER =
+            Logger.getLogger(
+                    TicketTrackingServiceImpl.class.getName()
+            );
     private final TicketTrackingDAO trackingDAO;
     private final TicketDAO ticketDAO;
 
@@ -107,7 +110,30 @@ public class TicketTrackingServiceImpl
 
         tracking.setUpdatedBy(loggedInUser.getId());
 
-        return trackingDAO.create(tracking);
+        LOGGER.info(
+                "Updating tracking for ticket ID: "
+                        + tracking.getTicketId()
+                        + " by user ID: "
+                        + loggedInUser.getId()
+                        + ", progress: "
+                        + tracking.getProgress()
+                        + "%"
+        );
+
+        boolean result =
+                trackingDAO.create(tracking);
+
+        if (result) {
+            LOGGER.info(
+                    "Ticket tracking updated successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Ticket tracking update failed."
+            );
+        }
+
+        return result;
     }
 
     @Override

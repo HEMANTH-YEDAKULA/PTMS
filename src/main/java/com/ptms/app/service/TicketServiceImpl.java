@@ -6,14 +6,14 @@ import com.ptms.app.dao.TicketDAO;
 import com.ptms.app.dao.TicketDAOImpl;
 import com.ptms.app.model.Ticket;
 import com.ptms.app.model.User;
-
+import java.util.logging.Logger;
 import java.util.List;
 
 public class TicketServiceImpl implements TicketService {
 
     private final TicketDAO ticketDAO;
     private final ProjectMemberDAO projectMemberDAO;
-
+    private static final Logger LOGGER=Logger.getLogger(TicketServiceImpl.class.getName());
     public TicketServiceImpl() {
         this.ticketDAO = new TicketDAOImpl();
         this.projectMemberDAO = new ProjectMemberDAOImpl();
@@ -37,7 +37,28 @@ public class TicketServiceImpl implements TicketService {
 
         validateTicket(ticket);
 
-        return ticketDAO.create(ticket);
+        LOGGER.info(
+                "Creating ticket: "
+                        + ticket.getTitle()
+                        + " for project ID: "
+                        + ticket.getProjectId()
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = ticketDAO.create(ticket);
+
+        if (result) {
+            LOGGER.info(
+                    "Ticket created successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Ticket creation failed."
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -80,7 +101,28 @@ public class TicketServiceImpl implements TicketService {
             );
         }
 
-        return ticketDAO.update(ticket);
+        LOGGER.info(
+                "Updating ticket ID: "
+                        + ticket.getId()
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = ticketDAO.update(ticket);
+
+        if (result) {
+            LOGGER.info(
+                    "Ticket updated successfully: "
+                            + ticket.getId()
+            );
+        } else {
+            LOGGER.warning(
+                    "Ticket update failed: "
+                            + ticket.getId()
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -96,7 +138,26 @@ public class TicketServiceImpl implements TicketService {
             );
         }
 
-        return ticketDAO.delete(id);
+        LOGGER.info(
+                "Deleting ticket ID: "
+                        + id
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result = ticketDAO.delete(id);
+
+        if (result) {
+            LOGGER.info(
+                    "Ticket deleted successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Ticket deletion failed."
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -130,7 +191,32 @@ public class TicketServiceImpl implements TicketService {
             );
         }
 
-        return ticketDAO.assignTicket(ticketId, userId);
+        LOGGER.info(
+                "Assigning ticket ID: "
+                        + ticketId
+                        + " to user ID: "
+                        + userId
+                        + " by user ID: "
+                        + loggedInUser.getId()
+        );
+
+        boolean result =
+                ticketDAO.assignTicket(
+                        ticketId,
+                        userId
+                );
+
+        if (result) {
+            LOGGER.info(
+                    "Ticket assigned successfully."
+            );
+        } else {
+            LOGGER.warning(
+                    "Ticket assignment failed."
+            );
+        }
+
+        return result;
     }
 
     @Override
